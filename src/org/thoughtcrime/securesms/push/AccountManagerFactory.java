@@ -18,6 +18,7 @@ public class AccountManagerFactory {
     return new SignalServiceAccountManager(new SignalServiceNetworkAccess(context).getConfiguration(context),
                                            TextSecurePreferences.getLocalNumber(context),
                                            TextSecurePreferences.getPushServerPassword(context),
+                                           TextSecurePreferences.getDeviceId(context),
                                            BuildConfig.USER_AGENT);
   }
 

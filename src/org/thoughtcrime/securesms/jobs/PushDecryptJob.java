@@ -15,6 +15,7 @@ import org.thoughtcrime.securesms.ApplicationContext;
 import org.thoughtcrime.securesms.ConversationListActivity;
 import org.thoughtcrime.securesms.R;
 import org.thoughtcrime.securesms.attachments.Attachment;
+import org.thoughtcrime.securesms.BuildConfig;
 import org.thoughtcrime.securesms.attachments.DatabaseAttachment;
 import org.thoughtcrime.securesms.attachments.PointerAttachment;
 import org.thoughtcrime.securesms.crypto.IdentityKeyUtil;
@@ -45,6 +46,7 @@ import org.thoughtcrime.securesms.mms.OutgoingSecureMediaMessage;
 import org.thoughtcrime.securesms.mms.QuoteModel;
 import org.thoughtcrime.securesms.mms.SlideDeck;
 import org.thoughtcrime.securesms.notifications.MessageNotifier;
+import org.thoughtcrime.securesms.push.SignalServiceNetworkAccess;
 import org.thoughtcrime.securesms.recipients.Recipient;
 import org.thoughtcrime.securesms.service.WebRtcCallService;
 import org.thoughtcrime.securesms.sms.IncomingEncryptedMessage;
@@ -73,7 +75,11 @@ import org.whispersystems.libsignal.protocol.PreKeySignalMessage;
 import org.whispersystems.libsignal.state.SessionStore;
 import org.whispersystems.libsignal.state.SignalProtocolStore;
 import org.whispersystems.libsignal.util.guava.Optional;
+import org.whispersystems.signalservice.api.SignalServiceMessageReceiver;
+import org.whispersystems.signalservice.api.crypto.AttachmentCipherInputStream;
 import org.whispersystems.signalservice.api.crypto.SignalServiceCipher;
+import org.whispersystems.signalservice.api.messages.SignalServiceAttachment;
+import org.whispersystems.signalservice.api.messages.SignalServiceAttachmentPointer;
 import org.whispersystems.signalservice.api.messages.SignalServiceContent;
 import org.whispersystems.signalservice.api.messages.SignalServiceDataMessage;
 import org.whispersystems.signalservice.api.messages.SignalServiceEnvelope;
@@ -85,13 +91,19 @@ import org.whispersystems.signalservice.api.messages.calls.HangupMessage;
 import org.whispersystems.signalservice.api.messages.calls.IceUpdateMessage;
 import org.whispersystems.signalservice.api.messages.calls.OfferMessage;
 import org.whispersystems.signalservice.api.messages.calls.SignalServiceCallMessage;
+import org.whispersystems.signalservice.api.messages.multidevice.DeviceGroup;
+import org.whispersystems.signalservice.api.messages.multidevice.DeviceGroupsInputStream;
 import org.whispersystems.signalservice.api.messages.multidevice.ReadMessage;
 import org.whispersystems.signalservice.api.messages.multidevice.RequestMessage;
 import org.whispersystems.signalservice.api.messages.multidevice.SentTranscriptMessage;
 import org.whispersystems.signalservice.api.messages.multidevice.SignalServiceSyncMessage;
 import org.whispersystems.signalservice.api.messages.multidevice.VerifiedMessage;
 import org.whispersystems.signalservice.api.push.SignalServiceAddress;
+import org.whispersystems.signalservice.internal.util.DynamicCredentialsProvider;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 import java.security.MessageDigest;
 import java.util.LinkedList;
 import java.util.List;
@@ -195,6 +207,7 @@ public class PushDecryptJob extends ContextJob {
         else if (syncMessage.getRequest().isPresent())  handleSynchronizeRequestMessage(syncMessage.getRequest().get());
         else if (syncMessage.getRead().isPresent())     handleSynchronizeReadMessage(syncMessage.getRead().get(), envelope.getTimestamp());
         else if (syncMessage.getVerified().isPresent()) handleSynchronizeVerifiedMessage(syncMessage.getVerified().get());
+        else if (syncMessage.getGroups().isPresent())   handleSynchronizeGroupsMessage(envelope, syncMessage.getGroups().get());
         else                                           Log.w(TAG, "Contains no known sync types...");
       } else if (content.getCallMessage().isPresent()) {
         Log.w(TAG, "Got call message...");
@@ -515,6 +528,36 @@ public class PushDecryptJob extends ContextJob {
     MessageNotifier.setLastDesktopActivityTimestamp(envelopeTimestamp);
     MessageNotifier.cancelDelayedNotifications();
     MessageNotifier.updateNotification(context);
+  }
+
+  private void handleSynchronizeGroupsMessage(@NonNull SignalServiceEnvelope envelope,
+                                              @NonNull SignalServiceAttachment groups)
+  {
+    try {
+      SignalServiceAttachmentPointer pointer            = groups.asPointer();
+      File tmpFile                                      = File.createTempFile("group-sync", "tmp");
+      InputStream attachmentAsStream                    = retrieveAttachmentAsStream(pointer, tmpFile);
+      DeviceGroupsInputStream deviceGroupsInputStream   = new DeviceGroupsInputStream(attachmentAsStream);
+      DeviceGroup group                                 = deviceGroupsInputStream.read();
+      while(group != null) {
+        SignalServiceGroup signalGroup = new SignalServiceGroup(SignalServiceGroup.Type.UPDATE, group.getId(), group.getName().orNull(), group.getMembers(), group.getAvatar().orNull());
+        GroupMessageProcessor.handleGroupCreate(context, envelope, signalGroup, false);
+        group = deviceGroupsInputStream.read();
+      }
+    } catch(Exception e) {
+      throw new AssertionError(e);
+    }
+  }
+
+  private InputStream retrieveAttachmentAsStream(SignalServiceAttachmentPointer pointer, File tmpFile) throws IOException, InvalidMessageException {
+        final SignalServiceMessageReceiver messageReceiver = new SignalServiceMessageReceiver(new SignalServiceNetworkAccess(context).getConfiguration(context),
+                    new DynamicCredentialsProvider(TextSecurePreferences.getLocalNumber(context),
+                                TextSecurePreferences.getPushServerPassword(context),
+                                TextSecurePreferences.getSignalingKey(context),
+                                TextSecurePreferences.getDeviceId(context)),
+                    BuildConfig.USER_AGENT,
+                    null);
+        return messageReceiver.retrieveAttachment(pointer, tmpFile, 150 * 1024 * 1024);
   }
 
   private void handleMediaMessage(@NonNull SignalServiceEnvelope envelope,
