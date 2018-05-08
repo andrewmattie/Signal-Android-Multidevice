@@ -250,5 +250,5 @@
         </attr>
     </declare-styleable>
 
-
+    <bool name="isTablet">false</bool>
 </resources>

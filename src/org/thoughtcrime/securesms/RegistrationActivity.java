@@ -145,17 +145,25 @@ public class RegistrationActivity extends BaseActionBarActivity implements Verif
   private ChallengeReceiver           challengeReceiver;
   private SignalServiceAccountManager accountManager;
 
+  private boolean isTablet;
+
 
   @Override
   public void onCreate(Bundle icicle) {
     super.onCreate(icicle);
     setContentView(R.layout.registration_activity);
 
-    initializeResources();
-    initializeSpinner();
-    initializePermissions();
-    initializeNumber();
-    initializeChallengeListener();
+    isTablet = getResources().getBoolean(R.bool.isTablet);
+
+    if (!isTablet) {
+        initializeResources();
+        initializeSpinner();
+        initializePermissions();
+        initializeNumber();
+        initializeChallengeListener();
+    } else {
+        initializePermissions();
+    }
   }
 
   @Override
@@ -295,12 +303,16 @@ public class RegistrationActivity extends BaseActionBarActivity implements Verif
                .withRationaleDialog(getString(R.string.RegistrationActivity_signal_needs_access_to_your_contacts_and_media_in_order_to_connect_with_friends),
                                     R.drawable.ic_contacts_white_48dp, R.drawable.ic_folder_white_48dp)
                .onSomeGranted(permissions -> {
-                 if (permissions.contains(Manifest.permission.READ_PHONE_STATE)) {
-                   initializeNumber();
+                 if (permissions.contains(Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
+                     initializeBackupDetection();
                  }
 
-                 if (permissions.contains(Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
-                   initializeBackupDetection();
+                 if (!isTablet) {
+                     if (permissions.contains(Manifest.permission.READ_PHONE_STATE)) {
+                         initializeNumber();
+                     }
+                 } else {
+                     handleCancel();
                  }
                })
                .execute();
