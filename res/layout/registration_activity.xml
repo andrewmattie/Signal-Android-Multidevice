@@ -177,13 +177,27 @@
                     android:layout_marginTop="20dp"
                     android:layout_gravity="center_horizontal"/>
 
-            <TextView android:id="@+id/skip_button"
+            <TextView android:id="@+id/or_text"
                       android:layout_gravity="center_horizontal"
                       android:layout_width="wrap_content"
                       android:layout_height="wrap_content"
                       android:layout_marginTop="20dp"
                       android:textColor="@color/gray50"
-                      android:text="@android:string/cancel"/>
+                      android:text="or"/>
+
+            <com.dd.CircularProgressButton android:id="@+id/skip_button"
+                      android:layout_gravity="center_horizontal"
+                      android:layout_width="match_parent"
+                      android:layout_height="50dp"
+                      android:layout_marginTop="20dp"
+                      android:layout_marginLeft="16dp"
+                      android:layout_marginRight="16dp"
+                      android:textColor="@color/white"
+                      app:cpb_textIdle="Link Device"
+                      app:cpb_selectorIdle="@drawable/secondary_progress_button_state"
+                      app:cpb_colorIndicator="@color/white"
+                      app:cpb_colorProgress="@color/textsecure_primary"
+                      app:cpb_cornerRadius="50dp"/>
 
             <TextView style="@style/Registration.Description"
                       android:id="@+id/registration_information"

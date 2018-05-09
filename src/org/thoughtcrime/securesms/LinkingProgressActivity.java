@@ -1,5 +1,6 @@
 package org.thoughtcrime.securesms;
 
+import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
@@ -8,22 +9,27 @@ import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.graphics.Bitmap;
 import android.os.Bundle;
-import android.app.Activity;
 import android.os.IBinder;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.view.View;
+import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.TextView;
+
+import com.dd.CircularProgressButton;
 
 import org.thoughtcrime.securesms.qr.QrCode;
 import org.thoughtcrime.securesms.service.LinkingService;
-import org.thoughtcrime.securesms.util.ViewUtil;
 
 public class LinkingProgressActivity extends Activity {
   private ServiceConnection serviceConnection = new LinkingServiceConnection();
   private LinkingService linkingService;
   private View container;
   private ImageView qrCode;
+  private EditText deviceNameEditText;
+  private CircularProgressButton nextButton;
+  private TextView titleText;
 
   private BroadcastReceiver messageReceiver = new BroadcastReceiver() {
     @Override
@@ -49,13 +55,25 @@ public class LinkingProgressActivity extends Activity {
     Log.d("LinkingProgressActivity", "onCreate");
     super.onCreate(savedInstanceState);
     setContentView(R.layout.linking_progress_activity);
-    qrCode = (ImageView) findViewById(R.id.linking_qr_code);
 
+    qrCode = (ImageView) findViewById(R.id.linking_qr_code);
+    deviceNameEditText = (EditText) findViewById(R.id.linking_device_name);
+    titleText = (TextView) findViewById(R.id.linking_title);
+    nextButton = (CircularProgressButton) findViewById(R.id.linking_next);
+
+    deviceNameEditText.setText(android.os.Build.MODEL);
+    nextButton.setOnClickListener(v -> generateQr());
 
     LocalBroadcastManager.getInstance(this).registerReceiver(messageReceiver, new IntentFilter(LinkingService.LINKING_EVENT));
     LocalBroadcastManager.getInstance(this).registerReceiver(messageReceiver, new IntentFilter(LinkingService.LINKING_PUBKEY));
+  }
 
+  private void generateQr() {
+    titleText.setText("Scan the QR code below on your phone to link your Signal account.");
+    nextButton.setVisibility(View.GONE);
+    deviceNameEditText.setVisibility(View.GONE);
     Intent intent = new Intent(this, LinkingService.class);
+    intent.putExtra("device_name", deviceNameEditText.getText().toString());
     bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE);
     startService(intent);
   }

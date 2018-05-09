@@ -3,21 +3,70 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:paddingBottom="@dimen/activity_vertical_margin"
-    android:paddingLeft="@dimen/activity_horizontal_margin"
-    android:paddingRight="@dimen/activity_horizontal_margin"
-    android:paddingTop="@dimen/activity_vertical_margin"
+    android:layout_height="match_parent" xmlns:app="http://schemas.android.com/apk/res-auto"
     tools:context="org.thoughtcrime.securesms.LinkingProgressActivity">
+
+    <LinearLayout android:id="@+id/header"
+                  android:layout_width="match_parent"
+                  android:layout_height="wrap_content"
+                  android:layout_alignParentTop="true"
+                  android:orientation="vertical"
+                  android:background="@color/signal_primary"
+                  android:padding="16dp">
+
+        <TextView android:id="@+id/verify_header"
+                  android:layout_width="match_parent"
+                  android:layout_height="wrap_content"
+                  android:layout_gravity="center"
+                  android:gravity="center"
+                  android:paddingBottom="16dp"
+                  android:text="Link Device"
+                  android:textColor="@color/white"
+                  android:textSize="20sp"
+                  android:textStyle="bold"/>
+
+        <TextView android:id="@+id/linking_title"
+                  android:layout_width="match_parent"
+                  android:layout_height="wrap_content"
+                  android:gravity="center"
+                  android:paddingBottom="25dp"
+                  android:text="Create a device name or leave it as is."
+                  android:textColor="@color/white"/>
+
+    </LinearLayout>
 
     <org.thoughtcrime.securesms.components.SquareImageView
         android:id="@+id/linking_qr_code"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:padding="20dp"
-        android:background="@drawable/qr_code_background"
-        tools:src="@drawable/splash_logo"
-        android:layout_centerHorizontal="true"
-        android:layout_alignParentTop="true" />
+        android:layout_below="@+id/header"
+        android:layout_centerHorizontal="true" android:background="@drawable/qr_code_background"
+        android:padding="20dp" tools:src="@drawable/splash_logo"/>
+    <EditText
+        android:id="@+id/linking_device_name"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/linking_qr_code" android:layout_centerHorizontal="true"
+        android:ems="10" android:hint="Device name"
+        android:inputType="textPersonName"/>
+    <com.dd.CircularProgressButton
+        android:id="@+id/linking_next"
+        app:cpb_textIdle="Next"
+        app:cpb_selectorIdle="@drawable/progress_button_state"
+        app:cpb_colorIndicator="@color/white"
+        app:cpb_colorProgress="@color/textsecure_primary"
+        app:cpb_cornerRadius="50dp"
+        android:background="@color/signal_primary"
+        android:textColor="@color/white"
+        android:layout_height="50dp"
+        android:layout_marginLeft="16dp"
+        android:layout_marginRight="16dp"
+        android:layout_marginTop="20dp"
+        android:layout_width="wrap_content"
+        android:layout_alignEnd="@+id/linking_device_name"
+        android:layout_alignLeft="@+id/linking_device_name"
+        android:layout_alignRight="@+id/linking_device_name"
+        android:layout_alignStart="@+id/linking_device_name"
+        android:layout_below="@+id/linking_device_name"/>
 
 </RelativeLayout>

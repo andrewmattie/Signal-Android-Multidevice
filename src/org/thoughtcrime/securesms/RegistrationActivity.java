@@ -7,6 +7,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -145,7 +146,7 @@ public class RegistrationActivity extends BaseActionBarActivity implements Verif
   private ChallengeReceiver           challengeReceiver;
   private SignalServiceAccountManager accountManager;
 
-  private boolean isTablet;
+  private boolean isSecondaryDevice;
 
 
   @Override
@@ -153,9 +154,9 @@ public class RegistrationActivity extends BaseActionBarActivity implements Verif
     super.onCreate(icicle);
     setContentView(R.layout.registration_activity);
 
-    isTablet = getResources().getBoolean(R.bool.isTablet);
+    isSecondaryDevice = getPackageManager().hasSystemFeature(PackageManager.FEATURE_TELEPHONY);
 
-    if (!isTablet) {
+    if (!isSecondaryDevice) {
         initializeResources();
         initializeSpinner();
         initializePermissions();
@@ -307,7 +308,7 @@ public class RegistrationActivity extends BaseActionBarActivity implements Verif
                      initializeBackupDetection();
                  }
 
-                 if (!isTablet) {
+                 if (!isSecondaryDevice) {
                      if (permissions.contains(Manifest.permission.READ_PHONE_STATE)) {
                          initializeNumber();
                      }

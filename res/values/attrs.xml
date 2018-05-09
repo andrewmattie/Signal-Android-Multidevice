@@ -249,6 +249,4 @@
             <enum name="incoming" value="2" />
         </attr>
     </declare-styleable>
-
-    <bool name="isTablet">false</bool>
 </resources>

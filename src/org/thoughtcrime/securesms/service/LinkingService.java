@@ -45,6 +45,7 @@ public class LinkingService extends Service {
   private final ExecutorService executor = Executors.newSingleThreadExecutor();
   public static final String LINKING_EVENT = "org.thoughtcrime.securesms.LINKING_EVENT";
   public static final String LINKING_PUBKEY = "org.thoughtcrime.securesms.LINKING_PUBKEY";
+  private String deviceNameExtra;
 
   @Override
   public IBinder onBind(Intent intent) {
@@ -65,6 +66,8 @@ public class LinkingService extends Service {
 
   private void handleLinkIntent(final Intent linkIntent) {
     try {
+      deviceNameExtra = linkIntent.getStringExtra("device_name");
+
       /* create tsdevice link */
       String password = Util.getSecret(18);
       IdentityKeyPair temporaryIdentity = KeyHelper.generateIdentityKeyPair();
@@ -80,7 +83,7 @@ public class LinkingService extends Service {
       /* finish link */
       String temporarySignalingKey = Util.getSecret(52);
       int registrationId = KeyHelper.generateRegistrationId(false);
-      String deviceName = android.os.Build.MODEL;
+      String deviceName = deviceNameExtra;
       SignalServiceAccountManager.NewDeviceRegistrationReturn ret = accountManager.finishNewDeviceRegistration(temporaryIdentity, temporarySignalingKey, false, true, registrationId, deviceName);
       String gcmRegistrationId = GoogleCloudMessaging.getInstance(this).register(GcmRefreshJob.REGISTRATION_ID);
       accountManager.setGcmId(Optional.of(gcmRegistrationId));
