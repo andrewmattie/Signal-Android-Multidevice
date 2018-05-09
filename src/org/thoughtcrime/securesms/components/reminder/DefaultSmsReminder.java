@@ -3,6 +3,7 @@ package org.thoughtcrime.securesms.components.reminder;
 import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.os.Build.VERSION_CODES;
 import android.provider.Telephony;
 import android.view.View;
@@ -44,6 +45,7 @@ public class DefaultSmsReminder extends Reminder {
       TextSecurePreferences.setPromptedDefaultSmsProvider(context, false);
     }
 
-    return !isDefault && !TextSecurePreferences.hasPromptedDefaultSmsProvider(context);
+    return !isDefault && !TextSecurePreferences.hasPromptedDefaultSmsProvider(context)
+            && !context.getPackageManager().hasSystemFeature(PackageManager.FEATURE_TELEPHONY);
   }
 }
